@@ -22,7 +22,7 @@ This project is a **proof-of-concept** that uses an **ESP32 microcontroller** to
 2. **Clone this repository**:
 
    ```bash
-   git clone https://github.com/yourusername/esp32-wifi-scanner.git
+   git clone https://github.com/red5labs/Specter.git
    cd esp32-wifi-scanner
    ```
 3. **Upload the code** to your ESP32.
