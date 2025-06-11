@@ -868,7 +868,26 @@ void handleRoot() {
         <div class="status-dot" id="scanStatus"></div>
         <span id="scanStatusText">Ready</span>
       </div>
+      <div class="status-indicator">
+        <span id="currentTime">--:--:--</span>
+      </div>
       <div class="network-count" id="networkCount">0 networks</div>
+    </div>
+    
+    <!-- Session Info Bar -->
+    <div class="status-bar" style="margin-top: 0.5rem; font-size: 0.9rem;">
+      <div class="status-indicator">
+        <span>📅 Session: <span id="sessionDuration">00:00:00</span></span>
+      </div>
+      <div class="status-indicator">
+        <span>🔄 Last Scan: <span id="lastScanTime">Never</span></span>
+      </div>
+      <div class="status-indicator">
+        <span>📊 Scans: <span id="scanCount">0</span></span>
+      </div>
+      <div class="status-indicator">
+        <span>🔍 Discovered: <span id="totalNetworksDiscovered">0</span> total</span>
+      </div>
     </div>
     
     <button class="btn scan-btn" onclick="toggleScan()" id="scanBtn" disabled>
@@ -1052,12 +1071,34 @@ void handleRoot() {
       <div class="chart-container">
         <div class="chart-header">
           <span class="chart-title">📊 Signal Strength History</span>
-          <div class="chart-controls">
-            <button class="time-btn active" onclick="setTimeRange(30)">30s</button>
-            <button class="time-btn" onclick="setTimeRange(60)">1m</button>
-            <button class="time-btn" onclick="setTimeRange(300)">5m</button>
-            <button class="time-btn" onclick="clearChart()">Clear</button>
-          </div>
+                  <div class="chart-controls">
+          <button class="time-btn active" onclick="setTimeRange(30)">30s</button>
+          <button class="time-btn" onclick="setTimeRange(60)">1m</button>
+          <button class="time-btn" onclick="setTimeRange(300)">5m</button>
+          <button class="time-btn" onclick="clearChart()">Clear</button>
+        </div>
+      </div>
+      
+      <!-- Chart Style Controls -->
+      <div class="chart-header" style="margin-top: 1rem;">
+        <span class="chart-title">🎨 Chart Style</span>
+        <div class="chart-controls">
+          <button class="time-btn active" onclick="setChartStyle('line')" id="lineStyle">Line</button>
+          <button class="time-btn" onclick="setChartStyle('area')" id="areaStyle">Area</button>
+          <button class="time-btn" onclick="setChartStyle('bars')" id="barsStyle">Bars</button>
+          <button class="time-btn" onclick="setChartStyle('dots')" id="dotsStyle">Dots</button>
+        </div>
+      </div>
+      
+      <!-- Chart Options -->
+      <div class="chart-header" style="margin-top: 1rem;">
+        <span class="chart-title">⚙️ Options</span>
+        <div class="chart-controls">
+          <button class="time-btn" onclick="toggleGrid()" id="gridToggle">Grid: ON</button>
+          <button class="time-btn" onclick="toggleZones()" id="zonesToggle">Zones: ON</button>
+          <button class="time-btn" onclick="toggleSmoothing()" id="smoothToggle">Smooth: OFF</button>
+          <button class="time-btn" onclick="exportChart()" id="exportChartBtn">📸 Export</button>
+        </div>
         </div>
         <canvas id="signalChart" width="500" height="200"></canvas>
         <div class="chart-stats">
@@ -1079,9 +1120,20 @@ void handleRoot() {
         </div>
       </div>
       
-      <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem;">
-        Last updated: <span id="lastUpdate">-</span>
-      </p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem; font-size: 0.9rem; color: #94a3b8;">
+        <div>
+          <strong style="color: #3b82f6;">Last Update:</strong><br>
+          <span id="lastUpdate">-</span>
+        </div>
+        <div>
+          <strong style="color: #3b82f6;">Tracking Duration:</strong><br>
+          <span id="trackingDuration">00:00:00</span>
+        </div>
+        <div>
+          <strong style="color: #3b82f6;">Data Points:</strong><br>
+          <span id="dataPointCount">0</span>
+        </div>
+      </div>
       <button class="btn" onclick="stopTracking()" style="width: 100%;">Stop Tracking</button>
     </div>
   </div>
@@ -1093,6 +1145,48 @@ void handleRoot() {
       <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
         <button class="btn" onclick="closeDetailsModal()" style="flex: 1;">Close</button>
         <button class="btn" onclick="trackFromDetails()" id="trackFromDetailsBtn" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Track Device</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Network Discovery Panel -->
+  <div class="filter-panel" style="margin-top: 1rem;">
+    <div class="filter-header">
+      <div class="filter-title">
+        📊 Discovery Stats
+      </div>
+      <button class="filter-toggle" onclick="toggleDiscoveryStats()" id="discoveryToggle">
+        Show Stats
+      </button>
+    </div>
+    
+    <div class="filter-content" id="discoveryContent">
+      <div class="filter-group">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+          <div class="stat-item">
+            <div class="stat-label">Total Discovered</div>
+            <div class="stat-value" id="totalDiscovered">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Currently Visible</div>
+            <div class="stat-value" id="currentlyVisible">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Session Duration</div>
+            <div class="stat-value" id="sessionDurationStat">00:00:00</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Avg per Scan</div>
+            <div class="stat-value" id="avgPerScan">0</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-group">
+        <label class="filter-label">Recent Discoveries (Last 5 minutes)</label>
+        <div id="recentDiscoveries" style="background: rgba(15, 23, 42, 0.8); padding: 1rem; border-radius: 0.5rem; max-height: 200px; overflow-y: auto;">
+          No recent discoveries
+        </div>
       </div>
     </div>
   </div>
@@ -1114,6 +1208,20 @@ void handleRoot() {
     let chartCtx = null;
     let timeRange = 30;
     let maxDataPoints = 150;
+    
+    // Chart styling options
+    let chartStyle = 'line'; // line, area, bars, dots
+    let showGrid = true;
+    let showZones = true;
+    let smoothData = false;
+    
+    // Timestamp tracking variables - ADD THESE
+    let sessionStartTime = null;
+    let lastScanTimestamp = null;
+    let scanCount = 0;
+    let networkDiscoveryTimes = {};
+    let trackingStartTime = null;
+    let trackingDurationInterval = null;
     
     // Filter and search functions
     function toggleFilters() {
@@ -1312,152 +1420,73 @@ void handleRoot() {
       
       chartCtx.clearRect(0, 0, width, height);
       
-      const padding = 40;
+      const padding = 50;
       const chartWidth = width - padding * 2;
       const chartHeight = height - padding * 2;
       
       const now = Date.now();
       const timeThreshold = now - (timeRange * 1000);
-      const filteredData = signalHistory.filter(point => point.timestamp >= timeThreshold);
+      let filteredData = signalHistory.filter(point => point.timestamp >= timeThreshold);
       
       if (filteredData.length === 0) {
-        drawChartFrame(padding, chartWidth, chartHeight);
         drawEmptyMessage(width, height);
         return;
+      }
+      
+      // Apply smoothing if enabled
+      if (smoothData && filteredData.length > 2) {
+        filteredData = applySmoothingFilter(filteredData);
       }
       
       const signalValues = filteredData.map(p => p.signal).filter(s => s !== 'Not Found');
       const minSignal = Math.min(...signalValues, -100);
       const maxSignal = Math.max(...signalValues, -20);
-      const signalRange = maxSignal - minSignal || 20;
+      const signalRange = maxSignal - minSignal;
       
-      drawChartFrame(padding, chartWidth, chartHeight);
-      drawGrid(padding, chartWidth, chartHeight, minSignal, maxSignal);
-      drawAxes(padding, chartWidth, chartHeight, minSignal, maxSignal, timeThreshold);
-      drawSignalLine(filteredData, padding, chartWidth, chartHeight, minSignal, signalRange, timeThreshold);
-      updateStatistics(signalValues);
-    }
-    
-    function drawChartFrame(padding, chartWidth, chartHeight) {
+      // Draw signal quality zones if enabled
+      if (showZones) {
+        drawSignalZones(padding, chartWidth, chartHeight, minSignal, maxSignal);
+      }
+      
+      // Draw grid if enabled
+      if (showGrid) {
+        drawGrid(padding, chartWidth, chartHeight, minSignal, maxSignal, now, timeThreshold);
+      }
+      
+      // Draw chart border
       chartCtx.strokeStyle = '#475569';
       chartCtx.lineWidth = 1;
       chartCtx.strokeRect(padding, padding, chartWidth, chartHeight);
-    }
-    
-    function drawGrid(padding, chartWidth, chartHeight, minSignal, maxSignal) {
-      chartCtx.strokeStyle = '#334155';
-      chartCtx.lineWidth = 0.5;
       
-      const signalStep = 10;
-      for (let signal = Math.ceil(minSignal / signalStep) * signalStep; signal <= maxSignal; signal += signalStep) {
-        const y = padding + chartHeight - ((signal - minSignal) / (maxSignal - minSignal)) * chartHeight;
-        chartCtx.beginPath();
-        chartCtx.moveTo(padding, y);
-        chartCtx.lineTo(padding + chartWidth, y);
-        chartCtx.stroke();
-      }
-      
-      const timeStep = timeRange / 6;
-      for (let i = 1; i < 6; i++) {
-        const x = padding + (i * chartWidth / 6);
-        chartCtx.beginPath();
-        chartCtx.moveTo(x, padding);
-        chartCtx.lineTo(x, padding + chartHeight);
-        chartCtx.stroke();
-      }
-    }
-    
-    function drawAxes(padding, chartWidth, chartHeight, minSignal, maxSignal, timeThreshold) {
-      chartCtx.fillStyle = '#94a3b8';
-      chartCtx.font = '10px sans-serif';
-      chartCtx.textAlign = 'center';
-      
-      chartCtx.textAlign = 'right';
-      const signalStep = 10;
-      for (let signal = Math.ceil(minSignal / signalStep) * signalStep; signal <= maxSignal; signal += signalStep) {
-        const y = padding + chartHeight - ((signal - minSignal) / (maxSignal - minSignal)) * chartHeight;
-        chartCtx.fillText(signal + 'dBm', padding - 5, y + 3);
-      }
-      
-      chartCtx.textAlign = 'center';
-      for (let i = 0; i <= 6; i++) {
-        const timeAgo = (timeRange * i / 6);
-        const x = padding + chartWidth - (i * chartWidth / 6);
-        const label = timeAgo === 0 ? 'Now' : `-${timeAgo}s`;
-        chartCtx.fillText(label, x, padding + chartHeight + 15);
-      }
-    }
-    
-    function drawSignalLine(data, padding, chartWidth, chartHeight, minSignal, signalRange, timeThreshold) {
-      if (data.length < 2) return;
-      
-      chartCtx.lineWidth = 2;
-      chartCtx.strokeStyle = '#3b82f6';
-      chartCtx.beginPath();
-      
-      let firstPoint = true;
-      data.forEach((point, index) => {
-        if (point.signal === 'Not Found') return;
+      // Draw data based on selected style
+      if (signalValues.length > 0) {
+        const dataPoints = filteredData.filter(p => p.signal !== 'Not Found').map(point => ({
+          x: padding + chartWidth - ((now - point.timestamp) / (timeRange * 1000)) * chartWidth,
+          y: padding + chartHeight - ((point.signal - minSignal) / signalRange) * chartHeight,
+          signal: point.signal,
+          timestamp: point.timestamp
+        }));
         
-        const x = padding + chartWidth - ((Date.now() - point.timestamp) / (timeRange * 1000)) * chartWidth;
-        const y = padding + chartHeight - ((point.signal - minSignal) / signalRange) * chartHeight;
-        
-        if (firstPoint) {
-          chartCtx.moveTo(x, y);
-          firstPoint = false;
-        } else {
-          chartCtx.lineTo(x, y);
+        switch (chartStyle) {
+          case 'line':
+            drawLineChart(dataPoints);
+            break;
+          case 'area':
+            drawAreaChart(dataPoints, padding + chartHeight);
+            break;
+          case 'bars':
+            drawBarChart(dataPoints, padding + chartHeight);
+            break;
+          case 'dots':
+            drawDotChart(dataPoints);
+            break;
         }
-      });
+      }
       
-      chartCtx.stroke();
-      drawSignalZones(padding, chartWidth, chartHeight, minSignal, signalRange);
-      drawDataPoints(data, padding, chartWidth, chartHeight, minSignal, signalRange);
-    }
-    
-    function drawSignalZones(padding, chartWidth, chartHeight, minSignal, signalRange) {
-      const zones = [
-        { min: -50, color: 'rgba(16, 185, 129, 0.1)', label: 'Excellent' },
-        { min: -60, color: 'rgba(34, 197, 94, 0.1)', label: 'Good' },
-        { min: -70, color: 'rgba(245, 158, 11, 0.1)', label: 'Fair' },
-        { min: -80, color: 'rgba(239, 68, 68, 0.1)', label: 'Poor' }
-      ];
+      // Draw axis labels
+      drawAxisLabels(padding, chartWidth, chartHeight, minSignal, maxSignal, now, timeThreshold);
       
-      zones.forEach(zone => {
-        if (zone.min >= minSignal && zone.min <= minSignal + signalRange) {
-          const y = padding + chartHeight - ((zone.min - minSignal) / signalRange) * chartHeight;
-          chartCtx.fillStyle = zone.color;
-          chartCtx.fillRect(padding, padding, chartWidth, y - padding);
-        }
-      });
-    }
-    
-    function drawDataPoints(data, padding, chartWidth, chartHeight, minSignal, signalRange) {
-      data.forEach(point => {
-        if (point.signal === 'Not Found') return;
-        
-        const x = padding + chartWidth - ((Date.now() - point.timestamp) / (timeRange * 1000)) * chartWidth;
-        const y = padding + chartHeight - ((point.signal - minSignal) / signalRange) * chartHeight;
-        
-        const signal = point.signal;
-        let color = '#ef4444';
-        if (signal > -50) color = '#10b981';
-        else if (signal > -60) color = '#22c55e';
-        else if (signal > -70) color = '#f59e0b';
-        
-        chartCtx.fillStyle = color;
-        chartCtx.beginPath();
-        chartCtx.arc(x, y, 3, 0, 2 * Math.PI);
-        chartCtx.fill();
-        
-        if (point === data[data.length - 1]) {
-          chartCtx.strokeStyle = color;
-          chartCtx.lineWidth = 2;
-          chartCtx.beginPath();
-          chartCtx.arc(x, y, 5, 0, 2 * Math.PI);
-          chartCtx.stroke();
-        }
-      });
+      updateStatistics(signalValues);
     }
     
     function drawEmptyMessage(width, height) {
@@ -1465,7 +1494,203 @@ void handleRoot() {
       chartCtx.font = '14px sans-serif';
       chartCtx.textAlign = 'center';
       chartCtx.fillText('No data available', width / 2, height / 2);
-      chartCtx.fillText('Start tracking to see signal history', width / 2, height / 2 + 20);
+    }
+    
+    function drawSignalZones(padding, chartWidth, chartHeight, minSignal, maxSignal) {
+      const zones = [
+        { min: -50, max: 0, color: 'rgba(16, 185, 129, 0.1)', label: 'Excellent' },
+        { min: -60, max: -50, color: 'rgba(34, 197, 94, 0.1)', label: 'Good' },
+        { min: -70, max: -60, color: 'rgba(245, 158, 11, 0.1)', label: 'Fair' },
+        { min: -80, max: -70, color: 'rgba(251, 146, 60, 0.1)', label: 'Poor' },
+        { min: -100, max: -80, color: 'rgba(239, 68, 68, 0.1)', label: 'Very Poor' }
+      ];
+      
+      const signalRange = maxSignal - minSignal;
+      
+      zones.forEach(zone => {
+        const zoneTop = Math.max(zone.max, minSignal);
+        const zoneBottom = Math.min(zone.min, maxSignal);
+        
+        if (zoneTop > zoneBottom) {
+          const y1 = padding + chartHeight - ((zoneTop - minSignal) / signalRange) * chartHeight;
+          const y2 = padding + chartHeight - ((zoneBottom - minSignal) / signalRange) * chartHeight;
+          
+          chartCtx.fillStyle = zone.color;
+          chartCtx.fillRect(padding, y1, chartWidth, y2 - y1);
+        }
+      });
+    }
+    
+    function drawGrid(padding, chartWidth, chartHeight, minSignal, maxSignal, now, timeThreshold) {
+      chartCtx.strokeStyle = '#374151';
+      chartCtx.lineWidth = 0.5;
+      
+      // Horizontal grid lines (signal strength)
+      const signalRange = maxSignal - minSignal;
+      const signalStep = Math.ceil(signalRange / 5);
+      
+      for (let signal = Math.ceil(minSignal / 10) * 10; signal <= maxSignal; signal += 10) {
+        const y = padding + chartHeight - ((signal - minSignal) / signalRange) * chartHeight;
+        chartCtx.beginPath();
+        chartCtx.moveTo(padding, y);
+        chartCtx.lineTo(padding + chartWidth, y);
+        chartCtx.stroke();
+      }
+      
+      // Vertical grid lines (time)
+      const timeStep = timeRange / 5;
+      for (let i = 0; i <= 5; i++) {
+        const x = padding + (i * chartWidth / 5);
+        chartCtx.beginPath();
+        chartCtx.moveTo(x, padding);
+        chartCtx.lineTo(x, padding + chartHeight);
+        chartCtx.stroke();
+      }
+    }
+    
+    function drawLineChart(dataPoints) {
+      if (dataPoints.length < 2) return;
+      
+      chartCtx.lineWidth = 3;
+      chartCtx.strokeStyle = '#3b82f6';
+      chartCtx.lineCap = 'round';
+      chartCtx.lineJoin = 'round';
+      
+      chartCtx.beginPath();
+      chartCtx.moveTo(dataPoints[0].x, dataPoints[0].y);
+      
+      for (let i = 1; i < dataPoints.length; i++) {
+        chartCtx.lineTo(dataPoints[i].x, dataPoints[i].y);
+      }
+      
+      chartCtx.stroke();
+      
+      // Add glow effect
+      chartCtx.shadowColor = '#3b82f6';
+      chartCtx.shadowBlur = 10;
+      chartCtx.stroke();
+      chartCtx.shadowBlur = 0;
+    }
+    
+    function drawAreaChart(dataPoints, baselineY) {
+      if (dataPoints.length < 2) return;
+      
+      // Create gradient
+      const gradient = chartCtx.createLinearGradient(0, 0, 0, baselineY);
+      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+      gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+      
+      // Fill area
+      chartCtx.fillStyle = gradient;
+      chartCtx.beginPath();
+      chartCtx.moveTo(dataPoints[0].x, baselineY);
+      chartCtx.lineTo(dataPoints[0].x, dataPoints[0].y);
+      
+      for (let i = 1; i < dataPoints.length; i++) {
+        chartCtx.lineTo(dataPoints[i].x, dataPoints[i].y);
+      }
+      
+      chartCtx.lineTo(dataPoints[dataPoints.length - 1].x, baselineY);
+      chartCtx.closePath();
+      chartCtx.fill();
+      
+      // Draw line on top
+      drawLineChart(dataPoints);
+    }
+    
+    function drawBarChart(dataPoints, baselineY) {
+      const barWidth = Math.max(2, (dataPoints.length > 1 ? 
+        Math.abs(dataPoints[1].x - dataPoints[0].x) * 0.8 : 5));
+      
+      chartCtx.fillStyle = '#3b82f6';
+      
+      dataPoints.forEach(point => {
+        const barHeight = Math.abs(point.y - baselineY);
+        chartCtx.fillRect(point.x - barWidth/2, Math.min(point.y, baselineY), barWidth, barHeight);
+      });
+    }
+    
+    function drawDotChart(dataPoints) {
+      dataPoints.forEach(point => {
+        const signalStrength = point.signal;
+        let color, radius;
+        
+        if (signalStrength > -50) {
+          color = '#10b981'; radius = 6;
+        } else if (signalStrength > -60) {
+          color = '#22c55e'; radius = 5;
+        } else if (signalStrength > -70) {
+          color = '#f59e0b'; radius = 4;
+        } else if (signalStrength > -80) {
+          color = '#fb923c'; radius = 3;
+        } else {
+          color = '#ef4444'; radius = 2;
+        }
+        
+        chartCtx.fillStyle = color;
+        chartCtx.beginPath();
+        chartCtx.arc(point.x, point.y, radius, 0, 2 * Math.PI);
+        chartCtx.fill();
+        
+        // Add white border
+        chartCtx.strokeStyle = '#ffffff';
+        chartCtx.lineWidth = 1;
+        chartCtx.stroke();
+      });
+    }
+    
+    function drawAxisLabels(padding, chartWidth, chartHeight, minSignal, maxSignal, now, timeThreshold) {
+      chartCtx.fillStyle = '#94a3b8';
+      chartCtx.font = '10px sans-serif';
+      
+      // Y-axis labels (signal strength)
+      chartCtx.textAlign = 'right';
+      const signalRange = maxSignal - minSignal;
+      
+      for (let signal = Math.ceil(minSignal / 10) * 10; signal <= maxSignal; signal += 10) {
+        const y = padding + chartHeight - ((signal - minSignal) / signalRange) * chartHeight;
+        chartCtx.fillText(signal + 'dBm', padding - 5, y + 3);
+      }
+      
+      // X-axis labels (time)
+      chartCtx.textAlign = 'center';
+      const timeStep = timeRange / 5;
+      
+      for (let i = 0; i <= 5; i++) {
+        const x = padding + (i * chartWidth / 5);
+        const timeAgo = timeRange - (i * timeStep);
+        const label = timeAgo === 0 ? 'Now' : `-${timeAgo}s`;
+        chartCtx.fillText(label, x, padding + chartHeight + 15);
+      }
+    }
+    
+    function applySmoothingFilter(data) {
+      if (data.length < 3) return data;
+      
+      const smoothed = [];
+      smoothed.push(data[0]); // Keep first point
+      
+      for (let i = 1; i < data.length - 1; i++) {
+        if (data[i].signal === 'Not Found') {
+          smoothed.push(data[i]);
+          continue;
+        }
+        
+        const prev = data[i - 1].signal === 'Not Found' ? data[i].signal : data[i - 1].signal;
+        const curr = data[i].signal;
+        const next = data[i + 1].signal === 'Not Found' ? data[i].signal : data[i + 1].signal;
+        
+        // Simple moving average
+        const smoothedSignal = Math.round((prev + curr + next) / 3);
+        
+        smoothed.push({
+          ...data[i],
+          signal: smoothedSignal
+        });
+      }
+      
+      smoothed.push(data[data.length - 1]); // Keep last point
+      return smoothed;
     }
     
     function updateStatistics(signalValues) {
@@ -1486,12 +1711,6 @@ void handleRoot() {
       document.getElementById('avgSignal').textContent = avg + ' dBm';
       document.getElementById('minSignal').textContent = min + ' dBm';
       document.getElementById('maxSignal').textContent = max + ' dBm';
-      
-      const currentEl = document.getElementById('currentSignal');
-      if (current > -50) currentEl.style.color = '#10b981';
-      else if (current > -60) currentEl.style.color = '#22c55e';
-      else if (current > -70) currentEl.style.color = '#f59e0b';
-      else currentEl.style.color = '#ef4444';
     }
     
     function addSignalDataPoint(signal) {
@@ -1510,6 +1729,55 @@ void handleRoot() {
       document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
       drawChart();
+    }
+    
+    function setChartStyle(style) {
+      chartStyle = style;
+      
+      // Update button states
+      document.querySelectorAll('#lineStyle, #areaStyle, #barsStyle, #dotsStyle').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(style + 'Style').classList.add('active');
+      
+      drawChart();
+    }
+    
+    function toggleGrid() {
+      showGrid = !showGrid;
+      const btn = document.getElementById('gridToggle');
+      btn.textContent = `Grid: ${showGrid ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', showGrid);
+      drawChart();
+    }
+    
+    function toggleZones() {
+      showZones = !showZones;
+      const btn = document.getElementById('zonesToggle');
+      btn.textContent = `Zones: ${showZones ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', showZones);
+      drawChart();
+    }
+    
+    function toggleSmoothing() {
+      smoothData = !smoothData;
+      const btn = document.getElementById('smoothToggle');
+      btn.textContent = `Smooth: ${smoothData ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', smoothData);
+      drawChart();
+    }
+    
+    function exportChart() {
+      if (!chartCtx) return;
+      
+      const canvas = chartCtx.canvas;
+      const link = document.createElement('a');
+      link.download = `signal-chart-${new Date().toISOString().slice(0, -5).replace(/[:.]/g, '-')}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+      
+      // Show success message
+      showExportSuccess(link.download);
     }
     
     function clearChart() {
@@ -1578,6 +1846,15 @@ void handleRoot() {
           
         case 'scanResults':
           currentNetworks = data.networks;
+          
+          // Update scan tracking
+          scanCount++;
+          lastScanTimestamp = Date.now();
+          updateLastScanTime();
+          
+          // Track network discoveries
+          trackNetworkDiscovery(data.networks);
+          
           applyFilters(); // Apply current filters to new data
           break;
           
@@ -1585,13 +1862,52 @@ void handleRoot() {
           isTracking = data.tracking;
           updateTrackingUI(data.tracking);
           if (data.tracking) {
+            trackingStartTime = Date.now();
+            
+            // Update modal with confirmed network info (modal should already be showing)
             document.getElementById('trackInfo').innerHTML = 
               `<strong>Network:</strong> ${data.essid || '<Hidden>'}<br><strong>BSSID:</strong> ${data.bssid}`;
-            document.getElementById('trackerModal').style.display = 'flex';
-            setTimeout(initChart, 100);
+            
+            // If modal isn't showing yet, show it now
+            if (document.getElementById('trackerModal').style.display !== 'flex') {
+              showTrackingModalImmediate(data.bssid, data.essid);
+            }
+            
+            // Reset tracking stats
+            document.getElementById('trackingDuration').textContent = '00:00:00';
+            document.getElementById('dataPointCount').textContent = '0';
+            document.getElementById('lastUpdate').textContent = 'Waiting for data...';
+            
+            // Start tracking duration updates
+            trackingDurationInterval = setInterval(updateTrackingDuration, 1000);
+            
+            // Chart should already be initialized, just clear it
+            if (chartCtx) {
+              clearChart();
+            }
           } else {
             document.getElementById('trackerModal').style.display = 'none';
+            trackingStartTime = null;
+            
+            // Stop tracking duration updates
+            if (trackingDurationInterval) {
+              clearInterval(trackingDurationInterval);
+              trackingDurationInterval = null;
+            }
+            
             clearChart();
+            
+            // Restart scanning automatically
+            if (!isScanning) {
+              setTimeout(() => {
+                if (isConnected && !isTracking) {
+                  console.log('Restarting scan after tracking');
+                  isScanning = true; // Set the local state to scanning
+                  updateScanStatus(true); // Update the UI
+                  ws.send(JSON.stringify({command: 'startScan'}));
+                }
+              }, 500); // Small delay to ensure tracking is fully stopped
+            }
           }
           break;
           
@@ -1599,6 +1915,7 @@ void handleRoot() {
           const signal = data.rssi === 'Not Found' ? 'Not Found' : parseInt(data.rssi);
           document.getElementById('signal').textContent = data.rssi;
           document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+          document.getElementById('dataPointCount').textContent = signalHistory.length + 1;
           addSignalDataPoint(signal);
           break;
       }
@@ -1664,19 +1981,26 @@ void handleRoot() {
           // Find original index for actions
           const originalIndex = currentNetworks.findIndex(n => n.bssid === d.bssid);
           
+          // Get discovery info for this network
+          const discoveryInfo = networkDiscoveryTimes[d.bssid];
+          const networkAge = discoveryInfo ? getNetworkAge(d.bssid) : 'New';
+          const isNewNetwork = discoveryInfo && (Date.now() - discoveryInfo.firstSeen < 30000); // New if discovered in last 30 seconds
+          
           table.innerHTML += `<tr${searchTerm && (displayName.toLowerCase().includes(searchTerm.toLowerCase()) || d.bssid.toLowerCase().includes(searchTerm.toLowerCase())) ? ' class="highlight"' : ''}>
             <td>
               <div class="network-name">
                 <span class="security-indicator ${encClass}"></span>
                 <div>
-                  <div style="font-weight: 600; ${isHidden ? 'opacity: 0.7; font-style: italic;' : ''}">${highlightedName}</div>
+                  <div style="font-weight: 600; ${isHidden ? 'opacity: 0.7; font-style: italic;' : ''}">${highlightedName} ${isNewNetwork ? '<span style="background: #10b981; color: white; font-size: 0.7rem; padding: 0.1rem 0.3rem; border-radius: 0.2rem; margin-left: 0.5rem;">NEW</span>' : ''}</div>
                   <div style="font-size: 0.8rem; color: #94a3b8; font-family: monospace;">${highlightedBSSID}</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">Discovered ${networkAge}</div>
                 </div>
               </div>
             </td>
             <td style="font-weight: 600; color: ${signalColor};">
               ${signalIcon} ${d.rssi} dBm
               <div style="font-size: 0.8rem; color: #94a3b8;">Ch ${d.channel}</div>
+              ${discoveryInfo ? `<div style="font-size: 0.75rem; color: #64748b;">Seen ${discoveryInfo.timesDetected}x</div>` : ''}
             </td>
             <td>
               <button class="btn" onclick="showDetails(${originalIndex})" style="margin-right: 0.25rem; font-size: 0.8rem;">Details</button>
@@ -1718,22 +2042,96 @@ void handleRoot() {
         essid: essid
       }));
       
-      // Update the modal immediately with network info
+      // Show modal immediately with loading state
+      showTrackingModalImmediate(bssid, essid);
+    }
+    
+    function showTrackingModalImmediate(bssid, essid) {
+      // Show modal immediately
       document.getElementById('trackInfo').innerHTML = 
         `<strong>Network:</strong> ${essid || '<Hidden>'}<br><strong>BSSID:</strong> ${bssid}`;
+      document.getElementById('trackerModal').style.display = 'flex';
+      
+      // Set loading state
+      document.getElementById('signal').textContent = 'Connecting...';
+      document.getElementById('trackingDuration').textContent = '00:00:00';
+      document.getElementById('dataPointCount').textContent = '0';
+      document.getElementById('lastUpdate').textContent = 'Initializing...';
+      
+      // Show loading message in chart area
+      const canvas = document.getElementById('signalChart');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.getBoundingClientRect();
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🔄 Initializing chart...', rect.width / 2, rect.height / 2);
+      }
+      
+      // Initialize chart asynchronously with minimal delay
+      requestAnimationFrame(() => {
+        initChart();
+      });
     }
     
     function stopTracking() {
       if (!isConnected) return;
       
       console.log('Stopping tracking');
-      ws.send(JSON.stringify({command: 'stopTrack'}));
+      isTracking = false; // Update local state immediately
       document.getElementById('trackerModal').style.display = 'none';
+      
+      // Stop tracking duration updates
+      if (trackingDurationInterval) {
+        clearInterval(trackingDurationInterval);
+        trackingDurationInterval = null;
+      }
+      
+      trackingStartTime = null;
+      clearChart();
+      
+      // Send stop tracking command
+      ws.send(JSON.stringify({command: 'stopTrack'}));
+      
+      // Restart scanning automatically
+      if (!isScanning) {
+        setTimeout(() => {
+          if (isConnected && !isTracking) {
+            console.log('Restarting scan after tracking');
+            isScanning = true; // Set the local state to scanning
+            updateScanStatus(true); // Update the UI
+            ws.send(JSON.stringify({command: 'startScan'}));
+          }
+        }, 500); // Small delay to ensure tracking is fully stopped
+      }
     }
     
     function showDetails(index) {
       selectedNetwork = currentNetworks[index];
       const encClass = selectedNetwork.enc === 'Open' ? 'status-open' : selectedNetwork.enc === 'Unknown' ? 'status-unknown' : 'status-secure';
+      const discovery = networkDiscoveryTimes[selectedNetwork.bssid];
+      
+      let discoveryInfo = '';
+      if (discovery) {
+        const firstSeenDate = new Date(discovery.firstSeen);
+        const lastSeenDate = new Date(discovery.lastSeen);
+        const sessionDuration = discovery.lastSeen - discovery.firstSeen;
+        
+        discoveryInfo = `
+          <div style="margin-bottom: 1rem;">
+            <strong style="color: #3b82f6;">Discovery Information:</strong><br>
+            <div style="background: rgba(15, 23, 42, 0.8); padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem;">
+              <div style="margin-bottom: 0.5rem;">First Seen: ${firstSeenDate.toLocaleString()}</div>
+              <div style="margin-bottom: 0.5rem;">Last Seen: ${lastSeenDate.toLocaleString()}</div>
+              <div style="margin-bottom: 0.5rem;">Times Detected: ${discovery.timesDetected}</div>
+              <div>Session Presence: ${formatDuration(sessionDuration)}</div>
+            </div>
+          </div>
+        `;
+      }
       
       document.getElementById("detailsContent").innerHTML = `
         <div style="background: rgba(51, 65, 85, 0.3); padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1rem;">
@@ -1758,14 +2156,30 @@ void handleRoot() {
             <br><small style="color: #94a3b8;">${getSignalQuality(selectedNetwork.rssi)}</small>
           </div>
           
-          <div>
+          <div style="margin-bottom: 1rem;">
             <strong style="color: #3b82f6;">Security:</strong><br>
             <span class="security-indicator ${encClass}"></span><span style="font-weight: 600;">${selectedNetwork.enc}</span>
           </div>
+          
+          ${discoveryInfo}
         </div>
       `;
       
       document.getElementById("detailsModal").style.display = "flex";
+    }
+    
+    function formatDuration(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+      } else if (minutes > 0) {
+        return `${minutes}m ${seconds % 60}s`;
+      } else {
+        return `${seconds}s`;
+      }
     }
     
     function getSignalQuality(rssi) {
@@ -1783,14 +2197,27 @@ void handleRoot() {
     
     function trackFromDetails() {
       if (selectedNetwork && isConnected) {
+        const bssid = selectedNetwork.bssid;
+        const essid = selectedNetwork.essid;
         closeDetailsModal();
-        startTracking(selectedNetwork.bssid, selectedNetwork.essid);
+        
+        // Start tracking with immediate modal display
+        console.log('Starting tracking for:', bssid);
+        ws.send(JSON.stringify({
+          command: 'startTrack',
+          bssid: bssid,
+          essid: essid
+        }));
+        
+        // Show modal immediately with loading state
+        showTrackingModalImmediate(bssid, essid);
       }
     }
     
     // Initialize WebSocket connection when page loads
     document.addEventListener('DOMContentLoaded', function() {
       console.log('Page loaded, initializing WebSocket...');
+      initializeTimestamps(); // Make sure this is here
       initWebSocket();
       
       // Initialize filters to default state
@@ -1840,18 +2267,49 @@ void handleRoot() {
       const canvas = document.getElementById('signalChart');
       if (!canvas) return;
       
-      // Set up high DPI support
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      
-      chartCtx = canvas.getContext('2d');
-      chartCtx.scale(dpr, dpr);
-      
-      // Clear any existing data
-      signalHistory = [];
-      drawChart();
+      try {
+        // Set up high DPI support more efficiently
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        
+        // Only resize if necessary
+        if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+          canvas.width = rect.width * dpr;
+          canvas.height = rect.height * dpr;
+        }
+        
+        if (!chartCtx) {
+          chartCtx = canvas.getContext('2d');
+        }
+        
+        // Reset transform and scale
+        chartCtx.setTransform(1, 0, 0, 1, 0, 0);
+        chartCtx.scale(dpr, dpr);
+        
+        // Clear any existing data
+        signalHistory = [];
+        
+        // Draw initial empty chart immediately
+        drawChart();
+        
+        // Update the status
+        if (document.getElementById('lastUpdate')) {
+          document.getElementById('lastUpdate').textContent = 'Chart ready';
+        }
+        
+        console.log('Chart initialized successfully');
+      } catch (error) {
+        console.error('Chart initialization error:', error);
+        // Fallback: show error message
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#ef4444';
+          ctx.font = '14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('Chart initialization failed', canvas.width / 2, canvas.height / 2);
+        }
+      }
     }
 
     // Export Functions
@@ -2157,6 +2615,171 @@ void handleRoot() {
         signalExportGroup.style.display = isTracking ? 'block' : 'none';
       }
     }
+
+    // Timestamp Functions
+    function initializeTimestamps() {
+      sessionStartTime = Date.now();
+      updateCurrentTime();
+      updateSessionDuration();
+      
+      // Update current time every second
+      setInterval(updateCurrentTime, 1000);
+      // Update session duration every second
+      setInterval(updateSessionDuration, 1000);
+    }
+
+    function updateCurrentTime() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString();
+      document.getElementById('currentTime').textContent = timeString;
+    }
+
+    function updateSessionDuration() {
+      if (!sessionStartTime) return;
+      
+      const duration = Date.now() - sessionStartTime;
+      const hours = Math.floor(duration / 3600000);
+      const minutes = Math.floor((duration % 3600000) / 60000);
+      const seconds = Math.floor((duration % 60000) / 1000);
+      
+      const durationString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      document.getElementById('sessionDuration').textContent = durationString;
+    }
+
+    function updateTrackingDuration() {
+      if (!trackingStartTime) return;
+      
+      const duration = Date.now() - trackingStartTime;
+      const hours = Math.floor(duration / 3600000);
+      const minutes = Math.floor((duration % 3600000) / 60000);
+      const seconds = Math.floor((duration % 60000) / 1000);
+      
+      const durationString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      document.getElementById('trackingDuration').textContent = durationString;
+    }
+
+    function updateLastScanTime() {
+      const now = new Date();
+      document.getElementById('lastScanTime').textContent = now.toLocaleTimeString();
+      document.getElementById('scanCount').textContent = scanCount;
+      document.getElementById('totalNetworksDiscovered').textContent = Object.keys(networkDiscoveryTimes).length;
+    }
+
+    function trackNetworkDiscovery(networks) {
+      const currentTime = Date.now();
+      
+      networks.forEach(network => {
+        const bssid = network.bssid;
+        
+        if (!networkDiscoveryTimes[bssid]) {
+          // First time seeing this network
+          networkDiscoveryTimes[bssid] = {
+            firstSeen: currentTime,
+            lastSeen: currentTime,
+            essid: network.essid || '<Hidden>',
+            timesDetected: 1
+          };
+        } else {
+          // Update last seen time and increment counter
+          networkDiscoveryTimes[bssid].lastSeen = currentTime;
+          networkDiscoveryTimes[bssid].timesDetected++;
+          
+          // Update ESSID if it wasn't hidden before
+          if (network.essid && network.essid.trim() !== '') {
+            networkDiscoveryTimes[bssid].essid = network.essid;
+          }
+        }
+      });
+    }
+
+    function getNetworkAge(bssid) {
+      if (!networkDiscoveryTimes[bssid]) return null;
+      
+      const discovery = networkDiscoveryTimes[bssid];
+      const now = Date.now();
+      const age = now - discovery.firstSeen;
+      
+      if (age < 60000) { // Less than 1 minute
+        return `${Math.floor(age / 1000)}s ago`;
+      } else if (age < 3600000) { // Less than 1 hour
+        return `${Math.floor(age / 60000)}m ago`;
+      } else {
+        return `${Math.floor(age / 3600000)}h ago`;
+      }
+    }
+
+    function formatRelativeTime(timestamp) {
+      const now = Date.now();
+      const diff = now - timestamp;
+      
+      if (diff < 1000) return 'just now';
+      if (diff < 60000) return `${Math.floor(diff / 1000)}s ago`;
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+      return `${Math.floor(diff / 86400000)}d ago`;
+    }
+
+    function toggleDiscoveryStats() {
+      const content = document.getElementById('discoveryContent');
+      const toggle = document.getElementById('discoveryToggle');
+      
+      if (content.classList.contains('active')) {
+        content.classList.remove('active');
+        toggle.textContent = 'Show Stats';
+        toggle.classList.remove('active');
+      } else {
+        content.classList.add('active');
+        toggle.textContent = 'Hide Stats';
+        toggle.classList.add('active');
+        updateDiscoveryStats();
+      }
+    }
+
+    function updateDiscoveryStats() {
+      const totalDiscovered = Object.keys(networkDiscoveryTimes).length;
+      const currentlyVisible = currentNetworks.length;
+      const avgPerScan = scanCount > 0 ? Math.round(currentlyVisible / scanCount * 10) / 10 : 0;
+      
+      document.getElementById('totalDiscovered').textContent = totalDiscovered;
+      document.getElementById('currentlyVisible').textContent = currentlyVisible;
+      document.getElementById('sessionDurationStat').textContent = document.getElementById('sessionDuration').textContent;
+      document.getElementById('avgPerScan').textContent = avgPerScan;
+      
+      updateRecentDiscoveries();
+    }
+
+    function updateRecentDiscoveries() {
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+      const recentNetworks = Object.entries(networkDiscoveryTimes)
+        .filter(([bssid, data]) => data.firstSeen > fiveMinutesAgo)
+        .sort(([,a], [,b]) => b.firstSeen - a.firstSeen)
+        .slice(0, 10);
+      
+      const container = document.getElementById('recentDiscoveries');
+      
+      if (recentNetworks.length === 0) {
+        container.innerHTML = '<div style="color: #64748b; font-style: italic;">No recent discoveries</div>';
+        return;
+      }
+      
+      container.innerHTML = recentNetworks.map(([bssid, data]) => {
+        const timeAgo = formatRelativeTime(data.firstSeen);
+        return `
+          <div style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(51, 65, 85, 0.4); border-radius: 0.25rem;">
+            <div style="font-weight: 600;">${data.essid}</div>
+            <div style="font-size: 0.8rem; color: #94a3b8; font-family: monospace;">${bssid}</div>
+            <div style="font-size: 0.75rem; color: #64748b;">Discovered ${timeAgo}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Update discovery stats periodically
+    setInterval(() => {
+      if (document.getElementById('discoveryContent') && document.getElementById('discoveryContent').classList.contains('active')) {
+        updateDiscoveryStats();
+      }
+    }, 5000);
   </script>
 </body>
 </html>
