@@ -317,6 +317,18 @@ void handleRoot() {
       cursor: not-allowed;
     }
     
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 0.125rem;
+      min-height: 36px;
+      border-radius: 50%;
+    }
+    
     .scan-btn {
       width: 100%;
       max-width: 300px;
@@ -1042,7 +1054,7 @@ void handleRoot() {
           <tr>
             <th class="sortable" onclick="sortTable('name')">Network</th>
             <th class="sortable" onclick="sortTable('signal')">Signal</th>
-            <th>Actions</th>
+            <th style="width: 90px;"></th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -1076,17 +1088,6 @@ void handleRoot() {
           <button class="time-btn" onclick="setTimeRange(60)">1m</button>
           <button class="time-btn" onclick="setTimeRange(300)">5m</button>
           <button class="time-btn" onclick="clearChart()">Clear</button>
-        </div>
-      </div>
-      
-      <!-- Chart Style Controls -->
-      <div class="chart-header" style="margin-top: 1rem;">
-        <span class="chart-title">🎨 Chart Style</span>
-        <div class="chart-controls">
-          <button class="time-btn active" onclick="setChartStyle('line')" id="lineStyle">Line</button>
-          <button class="time-btn" onclick="setChartStyle('area')" id="areaStyle">Area</button>
-          <button class="time-btn" onclick="setChartStyle('bars')" id="barsStyle">Bars</button>
-          <button class="time-btn" onclick="setChartStyle('dots')" id="dotsStyle">Dots</button>
         </div>
       </div>
       
@@ -1210,7 +1211,7 @@ void handleRoot() {
     let maxDataPoints = 150;
     
     // Chart styling options
-    let chartStyle = 'line'; // line, area, bars, dots
+    let chartStyle = 'area'; // Using area style by default
     let showGrid = true;
     let showZones = true;
     let smoothData = false;
@@ -1458,7 +1459,7 @@ void handleRoot() {
       chartCtx.lineWidth = 1;
       chartCtx.strokeRect(padding, padding, chartWidth, chartHeight);
       
-      // Draw data based on selected style
+      // Draw chart with area style and dots
       if (signalValues.length > 0) {
         const dataPoints = filteredData.filter(p => p.signal !== 'Not Found').map(point => ({
           x: padding + chartWidth - ((now - point.timestamp) / (timeRange * 1000)) * chartWidth,
@@ -1467,20 +1468,8 @@ void handleRoot() {
           timestamp: point.timestamp
         }));
         
-        switch (chartStyle) {
-          case 'line':
-            drawLineChart(dataPoints);
-            break;
-          case 'area':
-            drawAreaChart(dataPoints, padding + chartHeight);
-            break;
-          case 'bars':
-            drawBarChart(dataPoints, padding + chartHeight);
-            break;
-          case 'dots':
-            drawDotChart(dataPoints);
-            break;
-        }
+        // Always use area chart with dots
+        drawAreaChart(dataPoints, padding + chartHeight);
       }
       
       // Draw axis labels
@@ -1596,35 +1585,22 @@ void handleRoot() {
       
       // Draw line on top
       drawLineChart(dataPoints);
-    }
-    
-    function drawBarChart(dataPoints, baselineY) {
-      const barWidth = Math.max(2, (dataPoints.length > 1 ? 
-        Math.abs(dataPoints[1].x - dataPoints[0].x) * 0.8 : 5));
       
-      chartCtx.fillStyle = '#3b82f6';
-      
-      dataPoints.forEach(point => {
-        const barHeight = Math.abs(point.y - baselineY);
-        chartCtx.fillRect(point.x - barWidth/2, Math.min(point.y, baselineY), barWidth, barHeight);
-      });
-    }
-    
-    function drawDotChart(dataPoints) {
+      // Add dots at each data point
       dataPoints.forEach(point => {
         const signalStrength = point.signal;
         let color, radius;
         
         if (signalStrength > -50) {
-          color = '#10b981'; radius = 6;
+          color = '#10b981'; radius = 5;
         } else if (signalStrength > -60) {
-          color = '#22c55e'; radius = 5;
+          color = '#22c55e'; radius = 4;
         } else if (signalStrength > -70) {
           color = '#f59e0b'; radius = 4;
         } else if (signalStrength > -80) {
           color = '#fb923c'; radius = 3;
         } else {
-          color = '#ef4444'; radius = 2;
+          color = '#ef4444'; radius = 3;
         }
         
         chartCtx.fillStyle = color;
@@ -1638,6 +1614,8 @@ void handleRoot() {
         chartCtx.stroke();
       });
     }
+    
+    // Removed unused chart functions
     
     function drawAxisLabels(padding, chartWidth, chartHeight, minSignal, maxSignal, now, timeThreshold) {
       chartCtx.fillStyle = '#94a3b8';
@@ -1728,18 +1706,6 @@ void handleRoot() {
       timeRange = seconds;
       document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
-      drawChart();
-    }
-    
-    function setChartStyle(style) {
-      chartStyle = style;
-      
-      // Update button states
-      document.querySelectorAll('#lineStyle, #areaStyle, #barsStyle, #dotsStyle').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      document.getElementById(style + 'Style').classList.add('active');
-      
       drawChart();
     }
     
@@ -1873,6 +1839,29 @@ void handleRoot() {
               showTrackingModalImmediate(data.bssid, data.essid);
             }
             
+            // Add a temporary message as an overlay rather than clearing the table
+            const message = document.createElement('div');
+            message.style.cssText = `
+              position: fixed;
+              top: 20px;
+              right: 20px;
+              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+              color: white;
+              padding: 1rem 1.5rem;
+              border-radius: 0.75rem;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+              z-index: 1001;
+              font-weight: 600;
+              animation: slideIn 0.3s ease;
+            `;
+            message.innerHTML = `🔍 Now tracking: ${data.essid || data.bssid}`;
+            
+            document.body.appendChild(message);
+            setTimeout(() => {
+              message.style.animation = 'slideOut 0.3s ease';
+              setTimeout(() => document.body.removeChild(message), 300);
+            }, 3000);
+            
             // Reset tracking stats
             document.getElementById('trackingDuration').textContent = '00:00:00';
             document.getElementById('dataPointCount').textContent = '0';
@@ -1897,16 +1886,46 @@ void handleRoot() {
             
             clearChart();
             
-            // Restart scanning automatically
-            if (!isScanning) {
+            // Ensure scan button shows "Start Scanning"
+            if (isScanning) {
+              isScanning = false;
+              updateScanStatus(false);
+            }
+            
+            // If we have networks, keep them displayed but add a message at the top
+            if (currentNetworks.length > 0) {
+              // Redraw the network table
+              updateNetworkTable(filteredNetworks);
+              
+              // Add a notification message that appears temporarily
+              const message = document.createElement('div');
+              message.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 0.75rem;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                z-index: 1001;
+                font-weight: 600;
+                animation: slideIn 0.3s ease;
+              `;
+              message.innerHTML = `✅ Tracking stopped. Click "Start Scanning" for fresh data.`;
+              
+              document.body.appendChild(message);
               setTimeout(() => {
-                if (isConnected && !isTracking) {
-                  console.log('Restarting scan after tracking');
-                  isScanning = true; // Set the local state to scanning
-                  updateScanStatus(true); // Update the UI
-                  ws.send(JSON.stringify({command: 'startScan'}));
-                }
-              }, 500); // Small delay to ensure tracking is fully stopped
+                message.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => document.body.removeChild(message), 300);
+              }, 5000);
+            } else {
+              // If no networks, show the message to start scanning
+              document.getElementById('tableBody').innerHTML = `
+                <tr><td colspan="3" style="text-align: center; padding: 2rem; color: #64748b;">
+                  <p>Tracking stopped. Click "Start Scanning" to begin a new scan.</p>
+                </td></tr>
+              `;
             }
           }
           break;
@@ -2002,9 +2021,18 @@ void handleRoot() {
               <div style="font-size: 0.8rem; color: #94a3b8;">Ch ${d.channel}</div>
               ${discoveryInfo ? `<div style="font-size: 0.75rem; color: #64748b;">Seen ${discoveryInfo.timesDetected}x</div>` : ''}
             </td>
-            <td>
-              <button class="btn" onclick="showDetails(${originalIndex})" style="margin-right: 0.25rem; font-size: 0.8rem;">Details</button>
-              <button class="btn" onclick="startTracking('${d.bssid}', '${d.essid}')" style="font-size: 0.8rem;">Track</button>
+            <td style="text-align: center;">
+              <button class="btn btn-icon" onclick="showDetails(${originalIndex})" title="View Details" aria-label="View Details">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+                  <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+                </svg>
+              </button>
+              <button class="btn btn-icon" onclick="startTracking('${d.bssid}', '${d.essid}')" title="Track Device" aria-label="Track Device">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/>
+                </svg>
+              </button>
             </td>
           </tr>`;
         });
@@ -2036,6 +2064,36 @@ void handleRoot() {
       }
       
       console.log('Starting tracking for:', bssid);
+      
+      // If currently scanning, stop it and update UI
+      if (isScanning) {
+        isScanning = false;
+        updateScanStatus(false);
+      }
+      
+      // Add a temporary message as an overlay rather than clearing the table
+      const message = document.createElement('div');
+      message.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        z-index: 1001;
+        font-weight: 600;
+        animation: slideIn 0.3s ease;
+      `;
+      message.innerHTML = `🔍 Now tracking: ${essid || bssid}`;
+      
+      document.body.appendChild(message);
+      setTimeout(() => {
+        message.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => document.body.removeChild(message), 300);
+      }, 3000);
+      
       ws.send(JSON.stringify({
         command: 'startTrack',
         bssid: bssid,
@@ -2096,16 +2154,46 @@ void handleRoot() {
       // Send stop tracking command
       ws.send(JSON.stringify({command: 'stopTrack'}));
       
-      // Restart scanning automatically
-      if (!isScanning) {
+      // Ensure scan button shows "Start Scanning"
+      if (isScanning) {
+        isScanning = false;
+        updateScanStatus(false);
+      }
+      
+      // If we have networks, keep them displayed but add a message at the top
+      if (currentNetworks.length > 0) {
+        // Redraw the network table
+        updateNetworkTable(filteredNetworks);
+        
+        // Add a notification message that appears temporarily
+        const message = document.createElement('div');
+        message.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: white;
+          padding: 1rem 1.5rem;
+          border-radius: 0.75rem;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+          z-index: 1001;
+          font-weight: 600;
+          animation: slideIn 0.3s ease;
+        `;
+        message.innerHTML = `✅ Tracking stopped. Click "Start Scanning" for fresh data.`;
+        
+        document.body.appendChild(message);
         setTimeout(() => {
-          if (isConnected && !isTracking) {
-            console.log('Restarting scan after tracking');
-            isScanning = true; // Set the local state to scanning
-            updateScanStatus(true); // Update the UI
-            ws.send(JSON.stringify({command: 'startScan'}));
-          }
-        }, 500); // Small delay to ensure tracking is fully stopped
+          message.style.animation = 'slideOut 0.3s ease';
+          setTimeout(() => document.body.removeChild(message), 300);
+        }, 5000);
+      } else {
+        // If no networks, show the message to start scanning
+        document.getElementById('tableBody').innerHTML = `
+          <tr><td colspan="3" style="text-align: center; padding: 2rem; color: #64748b;">
+            <p>Tracking stopped. Click "Start Scanning" to begin a new scan.</p>
+          </td></tr>
+        `;
       }
     }
     
@@ -2200,6 +2288,35 @@ void handleRoot() {
         const bssid = selectedNetwork.bssid;
         const essid = selectedNetwork.essid;
         closeDetailsModal();
+        
+        // If currently scanning, stop it and update UI
+        if (isScanning) {
+          isScanning = false;
+          updateScanStatus(false);
+        }
+        
+        // Add a temporary message as an overlay rather than clearing the table
+        const message = document.createElement('div');
+        message.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          padding: 1rem 1.5rem;
+          border-radius: 0.75rem;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+          z-index: 1001;
+          font-weight: 600;
+          animation: slideIn 0.3s ease;
+        `;
+        message.innerHTML = `🔍 Now tracking: ${essid || bssid}`;
+        
+        document.body.appendChild(message);
+        setTimeout(() => {
+          message.style.animation = 'slideOut 0.3s ease';
+          setTimeout(() => document.body.removeChild(message), 300);
+        }, 3000);
         
         // Start tracking with immediate modal display
         console.log('Starting tracking for:', bssid);
