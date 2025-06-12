@@ -30,7 +30,7 @@ Specter is an ESP32-based WiFi scanning and tracking tool with a responsive web 
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/Specter_v3.git
+   git clone https://github.com/red5labs/Specter_v3.git
    ```
 
 2. Open `Specter_v3.ino` in Arduino IDE
