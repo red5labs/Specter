@@ -37,9 +37,10 @@ Specter is an ESP32-based WiFi scanning and tracking tool with a responsive web 
 
 3. Install required libraries through Arduino Library Manager
 
-4. Select your ESP32 board in the Arduino IDE
+4. Select your ESP32 board and port in the Arduino IDE
+   Note: For ESP32-S3 Super Mini choose Lolin S3 Mini
 
-5. Upload the sketch to your ESP32
+6. Upload the sketch to your ESP32
 
 ## Usage
 
