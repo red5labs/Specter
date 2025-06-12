@@ -12,7 +12,8 @@ This project is a **proof-of-concept** that uses an **ESP32 microcontroller** to
 
 ## Hardware Required
 
-* [ESP32 Dev Board (e.g., WROOM-32 or WROVER)](https://www.espressif.com/en/products/socs/esp32)
+* [ESP32 (e.g., WROOM-32, WROVER, ESP-32 S3)](https://www.espressif.com/en/products/socs/esp32)
+* Note: This has been tested on an ESP32 WROOM Dev Board and ESP32-S3 Super Mini
 * USB cable for programming
 * (Optional) OLED display or web interface for live data display
 
@@ -26,7 +27,7 @@ This project is a **proof-of-concept** that uses an **ESP32 microcontroller** to
    cd esp32-wifi-scanner
    ```
 3. **Upload the code** to your ESP32.
-4. Connect to the ESP32 using it's built-in access point (SSID: Specter / PW: specter1234)
+4. Connect to the ESP32 using it's built-in access point (SSID: Specter / PW: specter123)
 5. Open a browser and navigate to 192.168.4.1
 6. (Optional) Open the **Serial Monitor** at 115200 baud to view scanned networks.
 
